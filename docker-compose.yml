@@ -1,0 +1,102 @@
+version: '2'
+services:
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    environment:
+      - CLUSTER_NAME=test
+    ports:
+      - "9870:9870"   # HDFS UI
+      - "9000:9000"   # HDFS port
+    volumes:
+      - hadoop_namenode:/hadoop/dfs/name
+      - ./cats.txt:/workspace/cats.txt
+      - ./mapReduce.sh:/workspace/mapReduce.sh
+    env_file:
+      - ./hadoop.env
+
+
+  datanode1:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    ports:
+      - "9864:9864"
+    volumes:
+      - hadoop_datanode:/hadoop/dfs/data
+    env_file:
+      - ./hadoop.env
+      
+  workernode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: workernode
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    ports:
+      - "9866:9864"
+      #- "9875:9864"
+    volumes:
+      - hadoop_workernode:/hadoop/dfs/data
+    env_file:
+      - ./hadoop.env
+     
+  resourcemanager:
+    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+    container_name: resourcemanager
+    environment:
+      - CLUSTER_NAME=test
+    ports:
+      - "8032:8032"   # ResourceManager RPC
+      - "8088:8088"   # ResourceManager web UI
+    env_file:
+      - ./hadoop.env     
+
+        
+  nodemanager1:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager1
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode:9864 resourcemanager:8088"
+    env_file:
+      - ./hadoop.env
+  
+  nodemanager2:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager2
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: "workernode:9866 resourcemanager:8088"
+    env_file:
+      - ./hadoop.env
+  nodemanager3:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager3
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 resourcemanager:8088"
+    env_file:
+      - ./hadoop.env
+     
+  #historyserver:
+  #  image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
+  #  container_name: historyserver
+  #  restart: always
+  #  environment:
+  #    SERVICE_PRECONDITION: "namenode:9870 datanode:9864 resourcemanager:8088"
+  #  ports:
+  #    - "8188:8188" 
+  #    - "19888:19888"  # JobHistoryServer UI
+
+  #  volumes:
+  #    - hadoop_historyserver:/opt/hadoop-3.2.1/share/doc/hadoop/hadoop-yarn
+  #  env_file:
+  #    - ./hadoop.env
+
+
+volumes:
+  hadoop_namenode:
+  hadoop_datanode:
+  hadoop_workernode:
+#  hadoop_historyserver:
