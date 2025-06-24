@@ -1,8 +1,10 @@
 # Dockerized Hadoop + MapReduce demo
 Simple Hadoop running on Docker containers with MapReduce wordcount example ready to run.
 
-docker compose up                     # in one terminal
+# in one terminal
+docker compose up
 
-docker exec -it namenode /bin/bash    # in another terminal
+ # in another terminal
+ docker exec -it namenode /bin/bash   
 ./workspace/mapReduce.sh
 
